@@ -5,7 +5,6 @@
       <div id="carouselExampleInterval" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
           <div class="carousel-item active" data-bs-interval="5000">
-            <img src="../assets/images/happy.jpg" class="d-block w-100 full-screen" alt="...">
           </div>
           <div class="carousel-item" data-bs-interval="2000">
             <img src="https://kevinkodjo98.pythonanywhere.com/static/img/bg.png" class="d-block w-100 full-screen" alt="...">
@@ -146,19 +145,7 @@
               </div>
               <!--end::Separator-->
 
-              <!--begin::Google link-->
-              <a
-                href="#"
-                class="btn btn-flex flex-center btn-light btn-lg w-100 mb-5"
-              >
-                <img
-                  alt="Logo"
-                  src="media/svg/brand-logos/google-icon.svg"
-                  class="h-20px me-3"
-                />
-                Continue with Google
-              </a>
-              <!--end::Google link-->
+              
 
               <!--begin::Google link-->
         
