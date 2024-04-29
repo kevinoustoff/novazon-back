@@ -1,5 +1,4 @@
 <template>
-    <!--begin::Layout-->
     <div class="d-flex flex-column flex-xl-row">
       <!--begin::Sidebar-->
       <div class="flex-column flex-lg-row-auto w-100 w-xl-350px mb-10">
@@ -18,7 +17,7 @@
                 aria-expanded="false"
                 aria-controls="kt_customer_view_details"
               >
-                Details de la commande
+                Details du client
                 <span class="ms-2 rotate-180">
                   <span class="svg-icon svg-icon-3">
                     <inline-svg src="/media/icons/duotune/arrows/arr072.svg" />
@@ -49,28 +48,26 @@
             <div id="kt_customer_view_details" class="collapse show">
               <div class="py-5 fs-6">
                 <!--begin::Badge-->
-                <div class="badge badge-light-info d-inline">En préparation</div>
                 <!--begin::Badge-->
                 <!--begin::Details item-->
-                <div class="fw-bolder mt-5">ID de commande</div>
-                <div class="text-gray-600">{{(fullCurrentCommand)?fullCurrentCommand.commandRef:''}}</div>
+                <div class="fw-bolder mt-5">Identifiant client</div>
+                <div class="text-gray-600">{{(customer)? customer.id:"" }}</div>
                 <!--begin::Details item-->
                 <!--begin::Details item-->
-                <div class="fw-bolder mt-5">Vendeur</div>
+                <div class="fw-bolder mt-5">Prenom</div>
                 <div class="text-gray-600">
-                  <a href="#" class="text-gray-600 text-hover-primary"> {{(fullCurrentCommand)?fullCurrentCommand.sellers[0]:''}}</a
-                  >
+                  {{(customer)? customer.prenom:"" }}
                 </div>
                 <!--begin::Details item-->
                 <!--begin::Details item-->
-                <div class="fw-bolder mt-5">Relais</div>
+                <div class="fw-bolder mt-5">Nom</div>
                 <div class="text-gray-600">
-                  Relais 1<br/>Agoè Assiyéyé<br/>
+                  {{(customer)? customer.nom:"" }}
                 </div>
                 <!--begin::Details item-->
                 <!--begin::Details item-->
-                <div class="fw-bolder mt-5">Montant de la commande</div>
-                <div class="text-gray-600">{{(fullCurrentCommand)?fullCurrentCommand.value:''}}</div>
+                <div class="fw-bolder mt-5">Numero de téléphone</div>
+                <div class="text-gray-600">{{(customer)? customer.numero_tel:"" }}</div>
                 <!--begin::Details item-->
                 <!--begin::Details item-->
                 <!--begin::Details item-->
@@ -108,26 +105,7 @@
           <!--end:::Tab item-->
   
           <!--begin:::Tab item-->
-          <li class="nav-item">
-            <a
-              class="nav-link text-active-primary pb-4"
-              data-bs-toggle="tab"
-              href="#kt_customer_view_overview_events_and_logs_tab"
-              >Produits</a
-            >
-          </li>
-          <!--end:::Tab item-->
-  
-          <!--begin:::Tab item-->
-          <li class="nav-item">
-            <a
-              class="nav-link text-active-primary pb-4"
-              data-kt-countup-tabs="true"
-              data-bs-toggle="tab"
-              href="#kt_customer_view_overview_statements"
-              >Suivis</a
-            >
-          </li>
+          
           <!--end:::Tab item-->
   
           <!--begin:::Tab item-->
@@ -160,9 +138,10 @@
             id="kt_customer_view_overview_tab"
             role="tabpanel"
           >
-            <CreditBalance card-classes="mb-6 mb-xl-9" :montant="(fullCurrentCommand)?fullCurrentCommand.value:''"></CreditBalance>
-            <PaymentRecords card-classes="mb-6 mb-xl-9"></PaymentRecords>
-            
+           <!--Payments-->
+           
+           <CustomerCommands cardClasses="mb-6 mb-xl-9"  ></CustomerCommands>
+           <!--mettre les dernières commandes-->
           </div>
           <!--end:::Tab pane-->
   
@@ -172,8 +151,8 @@
             id="kt_customer_view_overview_events_and_logs_tab"
             role="tabpanel"
           >
-
-            <Products :articles="(fullCurrentCommand)?(fullCurrentCommand.articles):[]"></Products>
+            <!-- products -->
+            <!-- <Products :articles="(fullCurrentCommand)?(fullCurrentCommand.articles):[]"></Products> -->
           </div>
           <!--end:::Tab pane-->
   
@@ -183,7 +162,8 @@
             id="kt_customer_view_overview_statements"
             role="tabpanel"
           >
-            <Suivis></Suivis>
+            <!-- suivis -->
+            <!-- <Suivis></Suivis> -->
           </div>
           <!--end:::Tab pane-->
         </div>
@@ -191,87 +171,67 @@
       </div>
       <!--end::Content-->
     </div>
-    <!--end::Layout-->
-  
-    <NewCardModal></NewCardModal>
-  </template>
-  
-  <script lang="ts">
-  import { defineComponent,ref ,onMounted } from "vue";
-  import { setCurrentPageBreadcrumbs } from "@/core/helpers/breadcrumb";
-  import { MenuComponent } from "@/assets/ts/components";
-  import Dropdown3 from "@/components/dropdown/Dropdown3.vue";
-  import NewCardModal from "@/components/modals/forms/NewCardModal.vue";
-  import PaymentRecords from "@/components/customers/cards/overview/PaymentRecords.vue";
-  import PaymentMethods from "@/components/customers/cards/overview/PaymentMethods.vue";
-  import CreditBalance from "@/components/customers/cards/overview/CreditBalance.vue";
-  import Invoices from "@/components/customers/cards/overview/Invoices.vue";
-  
-  import Events from "@/components/customers/cards/events-and-logs/Events.vue";
-  import Logs from "@/components/customers/cards/events-and-logs/Logs.vue";
-  import { useRouter, RouterView } from 'vue-router';
-  import Earnings from "@/components/customers/cards/statments/Earnings.vue";
-  import Statement from "@/components/customers/cards/statments/Statement.vue";
-  import Products from "@/components/customers/cards/events-and-logs/Products.vue"
-  import Suivis from "@/components/customers/cards/statments/Suivis.vue"
-  import db from '../../firebase';
-  import { doc, getDoc, collection , getDocs} from 'firebase/firestore'
+</template>
+<script lang="ts">
+    import { defineComponent, ref, onMounted,computed, onBeforeMount} from "vue";
+    import db from '../../../firebase';
+    import { doc, getDoc, collection , getDocs} from 'firebase/firestore'
+    import { useRouter, RouterView, createRouter } from 'vue-router';
+    import CustomerCommands from'./CustomerCommands/index.vue'
+    export default defineComponent({
+        name:'customers-details',
+        components:{
+            CustomerCommands
+        },
+        setup(){
+            let customer = ref()
+            let customerKey = ref()
+            const router = useRouter();
+           
+            router.beforeEach(async (to, from) => {
+              
 
-  export default defineComponent({
-    name: "commandes-details",
-    props: ['ID'],
-    components: {
-      PaymentRecords,
-      PaymentMethods,
-      CreditBalance,
-      Invoices,
-      Events,
-      Logs,
-      Earnings,
-      Statement,
-      Dropdown3,
-      NewCardModal,
-      Products,
-      Suivis
-    },
-    setup() {
-        const router = useRouter();
-        let currentCommand = ref();
-        let fullCurrentCommand = ref();
-      onMounted(() => {
-
-        currentCommand.value =  router.currentRoute.value.params.id;
-        //MenuComponent.reinitialization();
-        console.log(router.currentRoute.value.params.id) 
-        setCurrentPageBreadcrumbs("Details de commandes", ["Apps", "Commandes"]);
-        
-        getCurrentCommand(db);
-    
-    });
-      
-     const getCurrentCommand = async (db) =>{
-        const docRef = doc(db, "Commandes", currentCommand.value);
-
-        getDoc(docRef)
-            .then((doc) => {
-                console.log(doc.data())
-
-                fullCurrentCommand.value = doc.data()
-                fullCurrentCommand.value.id = doc.id
+            
+            // ...
+            // explicitly return false to cancel the navigation
+            
+          })
+            
+            
+            onBeforeMount(async()=>{
+              
             })
-            .catch((error) => {
-                console.error("Error getting document:", error);
-            });
 
+            onMounted(async()=>{
+              customerKey.value = router.currentRoute.value.params.id;
+              
+              await getCustomer(db);
+              
+            })
 
-      };
+            const getCustomer = (db) =>{
+              const docRef = doc(db, "Customers", customerKey.value);
 
-      return {
-        router,
-        currentCommand,
-        fullCurrentCommand
-      };
-    },
-  });
-  </script>
-  
+              getDoc(docRef)
+                  .then((doc) => {
+                      console.log(doc.data())
+                      customer.value = doc.data()
+                      customer.value.id = doc.id
+                      
+                  })
+                  .catch((error) => {
+                      //console.error("Error getting document:", error);
+                  });
+            }
+            
+            return {
+                customer,
+                getCustomer,
+                customerKey,
+                
+            }
+        }
+    })
+
+</script>
+

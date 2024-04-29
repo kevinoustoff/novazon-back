@@ -78,14 +78,17 @@
       const center = ref({ lat: 6.1319, lng: 1.2095 }) 
       const markers = ref<Array<Object>>([])
       const mapRef = ref(null)
-      const loader = new Loader({ apiKey: 'AIzaSyCU0Pbsex6N4UZ-iAQ01s2OFvyFHWF6U24' })
+      const loader = new Loader({ apiKey: 'AIzaSyBjvysdl6vVFc1Vlu5LHOBnuWIhqP_Gzpw' })
       
       let map = ref(null)
 
       const update = () =>{
         props.relais.forEach(rel => {
-          
-             markers.value.push({position:{lat: rel.latitude, lng: rel.longitude},title:rel.relay_name})
+
+          if(rel.confirm === true){
+            markers.value.push({position:{lat: rel.latitude, lng: rel.longitude},title:rel.relay_name})
+          }
+             
         });
       }
       
@@ -93,13 +96,15 @@
         const markerGroup = L.layerGroup();
 
         props.relais.forEach(rel => {
+          if(rel.confirm === true){
+            let marker =  new google.maps.Marker({
+                    position: { lat: rel.latitude, lng: rel.longitude }, // Marker 2 coordinates
+                    map: map.value,
+                    title: rel.relay_name,
 
-         let marker =  new google.maps.Marker({
-          position: { lat: rel.latitude, lng: rel.longitude }, // Marker 2 coordinates
-          map: map.value,
-          title: rel.relay_name,
-
-      });
+                });
+          }
+         
         })
              
         });
@@ -107,7 +112,6 @@
 
    
       onMounted(async ()=>{
-        console.log(props.relais)
         await loader.load()
           map.value = new google.maps.Map(mapRef.value, {
           center: center.value,
@@ -120,7 +124,7 @@
         // Add markers to the map
         
       } catch (error) {
-        console.error('Error loading Google Maps:', error);
+        
       }
         
         

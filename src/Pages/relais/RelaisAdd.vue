@@ -143,7 +143,7 @@
                           </span>
                         </div>
                         <div
-                          id="kt_modal_add_customer_billing_info"
+                          id="kt_modal_add_c/ustomer_billing_info"
                           class="collapse show"
                         >
                           
@@ -230,7 +230,7 @@
   import db from "../../firebase"
   import { hideModal } from "@/core/helpers/dom";
   import Swal from "sweetalert2/dist/sweetalert2.js";
-  import { doc, getDoc, collection , getDocs, setDoc,addDoc} from 'firebase/firestore'
+  import { doc, getDoc, collection , getDocs, setDoc,addDoc,query, orderBy,limit} from 'firebase/firestore'
   import $ from 'jquery'
   import jQuery from 'jquery'
   import 'sweetalert2/dist/sweetalert2.min.css';
@@ -262,6 +262,8 @@
         longitude: "",
         quartier: null,
         gmanager_signature: false,
+        createdAt: null,
+        id_number: null,
         scheduling: [
             {start_time: {HH: '08', mm: '00'}, end_time: {HH: '09', mm: '00'}},
             {start_time: {HH: '08', mm: '00'}, end_time: {HH: '09', mm: '00'}},
@@ -316,7 +318,34 @@
     
       onMounted(() => {
         getQuartiers();
+        getLatestRelay();
     });
+
+    const getLatestRelay= async()=>{
+      const collectionRef = await collection(db,'Relais');
+
+      const q = query(collectionRef, orderBy('id_number', 'desc'),limit(1));
+
+      getDocs(q)
+      .then(async (querySnapshot) => {
+        querySnapshot.forEach(async (doci) => {
+          latestIdNumber.value = parseInt(doci.data().id_number)
+
+        
+        });
+
+        
+        
+      })
+      .catch((error) => {
+        loading.value = false;
+        
+      });
+
+      
+    }
+
+    const latestIdNumber = ref();
     const getLocation = () => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(function (position) {
@@ -338,10 +367,17 @@
     }
 
     const saveRelais = async () => {
+        
+        formData.value.id_number = latestIdNumber.value + 1
+
+        
         const collectionRef = await collection(db,'Relais');
         const button = document.getElementById('kt_modal_add_customer_submit');
 
         button.setAttribute("data-kt-indicator", "on");
+        let date = new Date()
+        
+        formData.value.createdAt = date.toLocaleString('fr-FR', { timeZone: 'UTC' })
         await addDoc(collectionRef, formData.value).then(
             () => {
                 button.removeAttribute("data-kt-indicator");
@@ -378,13 +414,10 @@
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           // doc.data() contains the data of each document
-          console.log('Document ID:', doc.id);
-          console.log('Document Data:', doc.data());
           quartiers.value.push(doc.data())
           // console.log(doc.data)
           
         });
-        console.log(quartiers)
       })
       .catch((error) => {
         console.error('Error getting documents from collection:', error);
@@ -461,7 +494,10 @@
         saveRelais,
         addDay,
         addDayss,
-        isButtonDisabled
+        isButtonDisabled,
+        latestIdNumber,
+        getLatestRelay
+      
       };
     },
   });

@@ -143,6 +143,10 @@ export default defineComponent({
   components: {},
   setup(props) {
     const data = ref(props.tableData);
+
+    watch(props.tableData, (newValue, oldValue) => {
+        data.value = props.tableData         
+    });
     const currentSort = ref<string>("");
     const click = ref<number>(1);
     const pagination = ref<IPagination>({

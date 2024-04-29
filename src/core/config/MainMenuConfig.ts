@@ -14,7 +14,7 @@ const DocMenuConfig = [
         fontIcon: "bi-layers",
       },
       {
-        heading: "customers",
+        heading: "Client",
         route: "/customers",
         svgIcon: "media/icons/duotune/general/gen019.svg",
         fontIcon: "bi-layers",
@@ -22,6 +22,12 @@ const DocMenuConfig = [
       {
         heading: "Commandes",
         route: "/commandes",
+        svgIcon: "media/icons/duotune/general/gen019.svg",
+        fontIcon: "bi-layers",
+      },
+      {
+        heading: "Vendeurs",
+        route: "/sellers",
         svgIcon: "media/icons/duotune/general/gen019.svg",
         fontIcon: "bi-layers",
       },

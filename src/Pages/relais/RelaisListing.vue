@@ -39,6 +39,15 @@
             </span>
             La carte des relais
           </button>
+          <json-excel 
+            class="btn btn-light-primary me-3 exporter"
+            :data="frelais"
+            name="data.xls" 
+            :fields="jsonFields"
+          >
+          <i class="fa-solid fa-file-export"></i>
+          Exporter
+          </json-excel>
           <!--end::Export-->
           <!--begin::Add customer-->
           <button
@@ -152,6 +161,9 @@
           <template v-slot:cell-longitude="{ row: customer }">
             {{ customer.longitude }}
           </template>
+          <template v-slot:cell-createdAt="{ row: customer }">
+            {{ customer.createdAt }}
+          </template>
           <template v-slot:cell-actions="{ row: customer }">
             <a
               href="#"
@@ -193,8 +205,7 @@
               <!--begin::Menu item-->
               <div class="menu-item px-3">
                 <a @click="deleteCustomer(customer.id)" class="menu-link px-3"
-                  >Delete</a
-                >
+                  >Delete</a>
               </div>
               <!--end::Menu item-->
             </div>
@@ -216,8 +227,11 @@ import AddRelaisModal from "./RelaisAdd.vue";
 import RelaisMap from "./RelaisMap.vue";
 import { MenuComponent } from "@/assets/ts/components";
 import { setCurrentPageBreadcrumbs } from "@/core/helpers/breadcrumb";
-import { doc, getDoc, collection , getDocs} from 'firebase/firestore'
+import { doc, getDoc, collection , getDocs,updateDoc, orderBy, query} from 'firebase/firestore'
 import db from '../../firebase';
+import JsonExcel from "vue-json-excel3";
+
+
 interface IRelais {
   id: number,
   key: number;
@@ -237,13 +251,25 @@ export default defineComponent({
   components: {
     Datatable,
     AddRelaisModal,
-    RelaisMap
+    RelaisMap,
+    JsonExcel
   },
   setup() {
+    const jsonFields = ref({
+     "Prenom du gérant": "first_name",
+     "Nom du gérant": "last_name",
+      "Nom de relais": "relay_name",
+      "Quartier" : "quartier",
+      "Numero de téléphone": "numero_telephone",
+      "Longitude": "longitude",
+      "Latitude": "latitude",
+      "Date de création": "createdAt"
+
+    })
 
     const relais  = ref([]);
     const checkedCustomers = ref([]);
-    
+    const commandesALivrer = ref([]);
     const tableHeader = ref([
       {
         key: "checkbox",
@@ -282,6 +308,11 @@ export default defineComponent({
         name: "Longitude",
         key: "longitude",
         sortable: true,
+      },
+      {
+        name:"Date de création",
+        key: "createdAt",
+        sortable: true
       },
       {
         name: "Actions",
@@ -367,29 +398,47 @@ export default defineComponent({
       }
       return false;
     };
+    const getArticlesALivrer = async (db)=>{
+      const collectionRef = await collection(db,'RelayCorrespondanceTable');
+      getDocs(collectionRef)
+         .then((querySnapshot) => {
+           querySnapshot.forEach((doci) => {
+            //  doc.data() contains the data of each document
+             let item = doci.data();
+             item.id = doci.id;
 
+             const docRef = doc(db, "Commandes");
+             const q = query(collectionRef, orderBy('createdAt', 'asc'));
+            //  cmdStatus.value.push(item);
+            // commandesALivrer
+           });
+           loading.value = false;
+         })
+         .catch((error) => {
+           loading.value = false;
+           console.error('Error getting documents from collection:', error);
+         });
+    };
     const getRelais = async (db) =>{
       
       const collectionRef = await collection(db,'Relais');
 
-      console.log(collectionRef);
+     
+      const q = query(collectionRef, orderBy('createdAt', 'asc'));
 
-      getDocs(collectionRef)
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          // doc.data() contains the data of each document
-          console.log('Document ID:', doc.id);
-          console.log('Document Data:', doc.data());
-          frelais.value.push(doc.data())
-          // console.log(doc.data)
-          
+      getDocs(q)
+      .then(async (querySnapshot) => {
+        querySnapshot.forEach(async (doci) => {
+          let timestamp = doci._document.createTime.timestamp 
+          frelais.value.push(doci.data())
         });
         loading.value = false;
       })
       .catch((error) => {
         loading.value = false;
-        console.error('Error getting documents from collection:', error);
       });
+      console.log(frelais)
+      //frelais.value.sort((a,b)=>)
 
     };
 
@@ -405,7 +454,26 @@ export default defineComponent({
       searchItems,
       checkedCustomers,
       deleteFewCustomers,
+      jsonFields
     };
   },
 });
 </script>
+<style lang="scss">
+   // Main demo style scss
+   @media only screen and (max-width: 767px) {
+  /* Styles for mobile devices */
+    .exporter{
+      display: none !important;
+    }
+    /* Add more styles as needed */
+  }
+  /* Styles pour les tablettes */
+  @media only screen and (min-width: 768px) and (max-width: 1023px) {
+    .exporter{
+      display: none !important;
+    }
+    /* Ajoutez plus de styles si nécessaire */
+  }
+   
+</style>

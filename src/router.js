@@ -3,10 +3,11 @@ import login from './Pages/login/index.vue'
 import Signin from '@/Pages/Signin.vue'
 import RelaisListing from '@/Pages/relais/RelaisListing.vue'
 import CustomersListing from '@/Pages/customers/CustomersListing.vue' 
-import Dashboard from '@/Pages/dashboards/index.vue'
+import Dashboard from '@/Pages/dashboards/main.vue'
 import CommandesListing from '@/Pages/commandes/index.vue'
 import CommandesDetails from '@/Pages/commandes/details.vue'
-
+import CustomersDetails from '@/Pages/customers/CustomersDetails/index.vue'
+import SellersListing from '@/Pages/Sellers/index.vue'
 const router = VueRouter.createRouter({
     history: VueRouter.createWebHistory(),
     routes: [
@@ -44,6 +45,11 @@ const router = VueRouter.createRouter({
             path: '/commandes/details/:id',
             component: CommandesDetails,
             name: 'commandesDet' 
+        },
+        {
+            path: '/sellers',
+            component: SellersListing,
+            name: 'sellers_index'
         }
       ]
 })
